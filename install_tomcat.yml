@@ -1,0 +1,41 @@
+---
+- name: My Test playbook
+  hosts: all
+  become: true
+  
+  vars:
+    version: 11
+
+  tasks:
+  - name: Install java on RedHat
+    yum:
+      name: java
+      state: present
+    when: ansible_os_family == "RedHat"
+
+  - name: Install java on Debian
+    apt:
+      name: default-jdk
+      state: present
+    when: ansible_os_family == "Debian"
+
+  - name: Download tomcat version {{version}}
+    get_url:
+      url: https://dlcdn.apache.org/tomcat/tomcat-{{version}}/v{{version}}.0.27/bin/apache-tomcat-{{version}}.0.27.tar.gz
+      dest: /opt/
+
+  - name: Extract Tomcat
+    unarchive:
+      src: /opt/apache-tomcat-{{version}}.0.27.tar.gz
+      dest: /opt/
+      remote_src: yes
+
+  - name: Executable permissions
+    file:
+      path: /opt/apache-tomcat-{{version}}.0.27/bin/startup.sh
+      mode: 0777
+
+  - name: Run .sh file
+    shell: nohup ./startup.sh
+    args:
+      chdir: /opt/apache-tomcat-{{version}}.0.27/bin
